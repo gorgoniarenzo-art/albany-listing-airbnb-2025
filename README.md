@@ -8,7 +8,7 @@ This repository contains a comprehensive market intelligence study of the Albany
 
 As the short-term rental market grows, investors face the risk of entering "oversupplied" segments that lead to price wars. This analysis evaluates 11 months of historical data to determine which property types offer the highest Average Daily Rate (ADR) and the most stable ROI for new acquisitions.
 
-![Albany Listing Analysis Dashboard](dashboard_albany.png)
+![Albany Listing Analysis Dashboard](dashboard_albany_screenshot.png)
 
 **Tools Used**
 
