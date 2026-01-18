@@ -1,0 +1,61 @@
+DATA CONSOLIDATION
+  
+To conduct a year-to-date analysis, I consolidated 11 individual monthly datasets (Jan–Nov 2025) into a single master table (albany_2025). 
+This unified view allows us to analyze consistent market trends across the year rather than relying on a single month's snapshot.
+
+Note on Data Loading: During the import process, I configured BigQuery to allow a small error threshold to bypass minor formatting anomalies in host-written text fields. 
+This ensured that over 99.5% of the data was successfully loaded without compromising the integrity of key metrics like price and listing counts.
+
+CREATE TABLE `albany_airbnb.albany_2025` AS
+SELECT * FROM `case-study-2025-483513.albany_airbnb.albany_jan`
+UNION ALL SELECT * FROM `albany_airbnb.albany_feb`
+UNION ALL SELECT * FROM `albany_airbnb.albany_mar`
+UNION ALL SELECT * FROM `albany_airbnb.albany_apr`
+UNION ALL SELECT * FROM `albany_airbnb.albany_may`
+UNION ALL SELECT * FROM `albany_airbnb.albany_jun`
+UNION ALL SELECT * FROM `albany_airbnb.albany_jul`
+UNION ALL SELECT * FROM `albany_airbnb.albany_aug`
+UNION ALL SELECT * FROM `albany_airbnb.albany_sep`
+UNION ALL SELECT * FROM `albany_airbnb.albany_oct`
+UNION ALL SELECT * FROM `albany_airbnb.albany_nov`;
+
+DATA CLEANING & AGGREGATION
+  
+Data cleaning was focused on removing "statistical noise" to ensure the investment recommendations are grounded in the realistic, investable market.
+
+Filtering "Price Noise": A percentile analysis revealed that while raw data showed prices up to $1,486, 95% of the market operates at or below $250. 
+To prevent luxury outliers from skewing our ROI projections, I focused the analysis on the $50–$250 range.
+
+Standardizing Categories: I filtered the dataset to include only the two primary room types ('Entire home/apt' and 'Private room') to provide a clear comparison for residential investors.
+
+Querying the 95th Percentile:
+
+SELECT
+  PERCENTILE_CONT(price, 0.95) OVER() AS p95_price
+FROM `case-study-2025-483513.albany_airbnb.albany_2025` 
+LIMIT 1;
+
+DATA ANALYSIS
+
+Analysis was performed to identify the "Value Gap" between different property types, measuring competition (Supply) against revenue potential (Average Daily Rate).
+
+MARKET SUMMARY ANALYSIS 
+
+By calculating the market share and average rate for each room type, we can identify which segment offers the highest return with the most sustainable level of competition.
+
+SELECT 
+  room_type,
+  COUNT(id) AS total_listings,
+  ROUND(AVG(price), 2) AS avg_daily_rate,
+  --Calculating market share to visualize supply dominance
+  ROUND(100 * COUNT(id) / SUM(COUNT(id)) OVER(), 2) AS market_share_percent
+FROM `case-study-2025-483513.albany_airbnb.albany_2025` 
+--Focusing on the realistic market and primary room types
+WHERE price >= 50 AND price <= 250
+  AND room_type IN ('Entire home/apt', 'Private room')
+GROUP BY room_type
+ORDER BY avg_daily_rate DESC;
+
+This query generates a high-level overview of the Albany market. It calculates the Total Supply (how many listings exist), the Average Daily Rate (what they actually earn), 
+and the Market Share (the percentage of the total market each type occupies). This allows us to see that even though 'Entire Homes' are more common, 
+their significantly higher earning power makes them the superior investment choice.
